@@ -3,6 +3,7 @@ import cv2
 import math
 from scipy.stats import multivariate_normal
 from sklearn import mixture
+import itertools
 
 
 class ImageSegmenter(object):
@@ -50,12 +51,29 @@ class ImageSegmenter(object):
         pass
 
     def singleton(self, i, j, label):
-        potential = 0.0
+        # = -log(P(z|x_i)) -> "log likelihood of the features given the label"
+        value = self.features[i, j]
+        mean = self.label_mean[label]
+        cov = self.label_covariance[label]
+        mv = multivariate_normal(mean=mean,cov=cov)
+        potential = -np.log(mv.pdf(value))
         #TODO: Calculate the singletone clique potential
         return potential
 
     def doubleton(self, i, j, label):
-        potential = 0.0
+        #Beta * delta(x_i,x_j)
+        possible_i_indicies = [ii for ii in range(i - 1, i + 2) if (ii >= 0 and ii < self.image.shape[0])]
+        possible_j_indicies = [jj for jj in range(j - 1, j + 2) if (jj >= 0 and jj < self.image.shape[1])]
+
+        neighborhood = [(ii, jj) for ii in possible_i_indicies for jj in possible_j_indicies]
+        equal_mask = []
+        for n in neighborhood:
+            if label == self.image_labels[n]:
+                equal_mask.append(-self.beta)
+            else:
+                equal_mask.append(self.beta)
+
+        potential = np.sum(equal_mask)
         #TODO: Calculate the doubleton clique potential
         return potential
 
@@ -63,13 +81,21 @@ class ImageSegmenter(object):
         energy = 0.0
         singletons = 0.0
         doubletons = 0.0
+
+        for ii in range(0, self.image.shape[0]):
+            for jj in range(0, self.image.shape[1]):
+                #Finish this implementation!
+                singletons += self.singleton(ii, jj, self.image_labels[ii, jj])
+                doubletons += self.doubleton(ii, jj, self.image_labels[ii, jj])
+
         #TODO: Calculate the energy of the whole image
         energy = singletons + doubletons / 2.0
         return energy
 
     def calculateLocalEnergy(self, i, j, label):
-        energy = 0.0
         #TODO: Calculate the energy of one pixel
+        energy = self.singleton(i, j, label) + self.doubleton(i, j, label)
+
         return energy
 
     def displayCurrentLabels(self):

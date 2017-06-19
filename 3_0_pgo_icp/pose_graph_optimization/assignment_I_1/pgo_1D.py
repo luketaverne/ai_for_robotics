@@ -12,6 +12,7 @@ from scipy import array, linalg, dot
 from enum import Enum
 import copy
 import pylab
+from scipy.linalg import cho_factor, cho_solve
 
 # Types of measurements
 class ConstraintType(Enum):
@@ -37,54 +38,54 @@ class PoseGraphOptimization1D():
     #    j:  index of the j'th node
     # u_ij:  odometry measurement from node i to node j
     def integrateOdometryMeasurement(self, i, j, u_ij):
-        self.x[j] = #TODO
+        self.x[j] = self.x[i] + u_ij
 
     #    i:  index of the i'th node
     #    j:  index of the j'th node
     # u_ij:  odometry measurement from node i to node j
     def addOdometryConstraintToPosegraph(self, i, j, u_ij):
         # Jacobian wrt. pose/node i.
-        A_ij = #TODO
+        A_ij = 1
         # Jacobian wrt. pose/node j.
-        B_ij = #TODO
+        B_ij = -1
         # Information of the measurement
-        Omega_ij = #TODO
+        Omega_ij = 100
         # Add the constraint to the pose graph.
         self.constraints.append([ConstraintType.ODOMETRY, i, j, A_ij, B_ij, Omega_ij, u_ij])
 
     def handleLoopClosure(self, i, j):
         # Jacobian wrt. pose/node i.
-        A_ij = #TODO
+        A_ij = 1
         # Jacobian wrt. pose/node j.
-        B_ij = #TODO
+        B_ij = -1
         # Information of the measurement.
-        Omega_ij = #TODO
-        u_ij = #TODO
+        Omega_ij = 100
+        u_ij = 0
         # Add the constraint to the pose graph.
         self.constraints.append([ConstraintType.LOOP_CLOSURE, i, j, A_ij, B_ij, Omega_ij, u_ij])
 
     def fixFirstNode(self):
         # Jacobian wrt. pose/node i.
-        A_ij = #TODO
-        B_ij = #TODO
+        A_ij = 1
+        B_ij = -1
         # Information of the measurement.
-        Omega_ij = #TODO
-        u_ij = #TODO
-        i = #TODO
-        j = #TODO
+        Omega_ij = 1000
+        u_ij = self.x[1]
+        i = int(0)
+        j = int(1)
         # Add the constraint to the pose graph.
         self.constraints.append([ConstraintType.FIXED_NODE, i, j, A_ij, B_ij, Omega_ij, u_ij])
 
     def evaluateOdometryResidual(self, i, j, u_ij):
-        e = #TODO
+        e = u_ij - (self.x[j] - self.x[i])
         return e
 
     def evaluateLoopClosureResidual(self, i, j):
-        e = #TODO
+        e = self.x[i] - self.x[j]
         return e
 
     def evaluateFixedNodeResidual(self):
-        e = #TODO
+        e = 0
         return e
 
     def optimizePoseGraph(self):
@@ -113,17 +114,18 @@ class PoseGraphOptimization1D():
                 if constraint_type == ConstraintType.FIXED_NODE:
                     e_ij = self.evaluateFixedNodeResidual()
 
-                b[i] = #TODO
-                b[j] = #TODO
+                b[i] += A_ij * Omega_ij * e_ij
+                b[j] += B_ij * Omega_ij * e_ij
 
                 # Hessian
-                H[i,i] = #TODO
-                H[i,j] = #TODO
-                H[j,i] = #TODO
-                H[j,j] = #TODO
+                H[i,i] += A_ij * Omega_ij * A_ij
+                H[i,j] += A_ij * Omega_ij * B_ij
+                H[j,i] += B_ij * Omega_ij * A_ij
+                H[j,j] += B_ij * Omega_ij * B_ij
 
             # Sparse Cholesky Factorization
-            self.x = #TODO
+            factor = cho_factor(H)
+            self.x += cho_solve(factor,-b)
 
         k = np.arange(0, self.num_nodes, 1)
         pylab.plot(k, x_odo, 'r', label='Odometry integrated')
@@ -155,14 +157,14 @@ def main():
     pgo.fixFirstNode()
     for iter in range(0, num_measurements):
         print "Iter ", iter, "/", num_measurements
-        if input_data[iter, 0] == ConstraintType.ODOMETRY.value:
+        if input_data[iter, 0] == ConstraintType.ODOMETRY:
             i = int(input_data[iter, 1])
             j = int(input_data[iter, 2])
             u_ij = input_data[iter, 3]
             print("Received an odometry measurement from node_%1d to node_%1d with meas. distance of %1f" % (i, j, u_ij))
             pgo.handleOdometryMeasurement(i, j, u_ij)
 
-        if input_data[iter, 0] == ConstraintType.LOOP_CLOSURE.value:
+        if input_data[iter, 0] == ConstraintType.LOOP_CLOSURE:
             print("Found a Loop-Closure from node_%1d to node_%1d!" % (i, j))
             i = int(input_data[iter, 1])
             j = int(input_data[iter, 2])

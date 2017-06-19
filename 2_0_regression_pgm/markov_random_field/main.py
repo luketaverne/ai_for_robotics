@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import pickle as pkl
 import numpy as np
@@ -17,7 +17,7 @@ max_iterations = 10  # maximum number of iterations
 temperature_init = 5  # initial temperature
 discount = 1  # temperature scheduler's factor
 
-number_of_labels = 6  # number of labels in the image
+number_of_labels = 5  # number of labels in the image
 size_ratio = 4  # increases the image by size_ratio, just for displaying
 
 image_segmentation1 = MarkovRandomField.ImageSegmenter(

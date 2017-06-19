@@ -1,3 +1,6 @@
+#!/usr/bin/env python2
+# Source: http://sebastianraschka.com/Articles/2014_pca_step_by_step.html
+#         https://stats.stackexchange.com/questions/2691/making-sense-of-principal-component-analysis-eigenvectors-eigenvalues
 import numpy as np
 from sklearn import preprocessing
 import matplotlib.pyplot as plt
@@ -7,19 +10,25 @@ orb_features = np.genfromtxt(open("orb_features.txt"))
 orb_features = orb_features.T
 
 orb_size = len(orb_features[:, 0])
-# TODO: Compute covariance (exchange the value for None).
-cov = None
+cov = np.cov(orb_features)
 
-# TODO: Compute eigenvectors and eigenvalues (exchange the value for None).
-eig_val_cov = None
-eig_vec_cov = None
+eig_val_cov, eig_vec_cov = np.linalg.eig(cov)
 
 # Sort eigenvectors and corresponding eigenvalues in descending order.
 eig_pairs = [(np.abs(eig_val_cov[i]), eig_vec_cov[:, i]) for i in range(len(eig_val_cov))]
 eig_pairs.sort(key=lambda x: x[0], reverse=True)
-    
-# TODO: Compute 5 dimensional feature vector based on largest eigenvalues and normalize the output (exchange the value for None).
-pca_features = None
+
+best_eig_vec = np.hstack(
+                            (
+                            eig_pairs[0][1].reshape((-1,1)),
+                            eig_pairs[1][1].reshape((-1,1)),
+                            eig_pairs[2][1].reshape((-1,1)),
+                            eig_pairs[3][1].reshape((-1,1)),
+                            eig_pairs[4][1].reshape((-1,1))
+                            )
+                        )
+
+pca_features = orb_features.T.dot(best_eig_vec)
 
 # Normalize pca features.
 pca_features = preprocessing.scale(pca_features)

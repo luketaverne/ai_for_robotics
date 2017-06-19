@@ -42,7 +42,7 @@ class LinearRegressionModel():
       for j in range(n_features):
         X[i, j] = self.feature_vec[j].evaluate(
             # TODO use all input dimensions
-            input_data[i, 0], input_data[i, 1])  # modify this line
+            input_data[i, 0], input_data[i, 1], input_data[i, 2], input_data[i, 3])  # modify this line
     return X
 
   def fit(self, input_data, output_data):
