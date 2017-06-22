@@ -16,11 +16,11 @@ import Support as sup
 # Input
 x = np.random.randn(1, 3)
 
-# Layer 1 
+# Layer 1
 w_1 = np.random.randn(3,4)
 b_1 = np.random.randn(1,4)
 
-# Layer 2 
+# Layer 2
 w_out = np.random.randn(4,2)
 b_out = np.random.randn(1,2)
 
@@ -48,38 +48,44 @@ class TestNetwork(unittest.TestCase):
   sigmoid = activation.SigmoidActivation()
 
   def testGradients(self):
-    
+
     # General computations
     loss_function = loss.SquaredErrorFunction()
     y = fc_net.output(x)
     loss_derivative = loss_function.derivative(y, y_target)
-    
+
     # Manually compute gradients
     h_1 = fc_net.evaluateLayer(1, x)
-    output_sigmoid = self.sigmoid.evaluate(np.dot(h_1, w_out) + b_out) 
+    print("h_1 shape:" + str(h_1.shape))
+    output_sigmoid = self.sigmoid.evaluate(np.dot(h_1, w_out) + b_out)
+    print("output_sigmoid shape: {}".format(output_sigmoid.shape))
     output_sigmoid_derivative = output_sigmoid * (1 - output_sigmoid)
-    
+    print("output_sigmoid_derivative shape: {}".format(output_sigmoid_derivative.shape))
+
     ## Output layer
     delta_out = loss_derivative * output_sigmoid_derivative
     L_w_out = np.dot(h_1.T, delta_out)
     L_b_out = delta_out
-    
+
     ## Hidden layer
     delta_1 = np.dot(delta_out, w_out.T) * self.sigmoid.derivative(np.dot(x, w_1) + b_1)
     L_w_1 = np.dot(x.T, delta_1)
     L_b_1 = delta_1
-    
+
     # Network gradients
     gradients = fc_net.gradients(x, loss_function, y_target)
     ## Output layer
     nn_L_w_out = gradients.weights[1]
     nn_L_b_out = gradients.biases[1]
-    
+
     ## Hidden layer
     nn_L_w_1 = gradients.weights[0]
     nn_L_b_1 = gradients.biases[0]
-    
+
     # Output derivatives
+    print("Expected: {}".format(w_out.shape))
+    print("Got: {}".format(nn_L_w_out.shape))
+    print(gradients.weights)
     self.assertTrue(np.all(nn_L_w_out.shape == w_out.shape), 'Gradient shapes of output layer do not match.')
     self.assertTrue(np.all(nn_L_b_out.shape == b_out.shape), 'Gradient shapes of output layer do not match.')
     self.assertTrue(np.all(np.isclose(L_w_out, nn_L_w_out, rtol=1.e-8)))
@@ -90,7 +96,7 @@ class TestNetwork(unittest.TestCase):
     self.assertTrue(np.all(nn_L_b_1.shape == b_1.shape), 'Gradient shapes of hidden layer do not match.')
     self.assertTrue(np.all(np.isclose(L_w_1, nn_L_w_1, rtol=1.e-8)))
     self.assertTrue(np.all(np.isclose(L_b_1, nn_L_b_1, rtol=1.e-8)))
-    
-    
+
+
 if __name__ == '__main__':
   unittest.main()

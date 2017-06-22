@@ -26,7 +26,7 @@ cls_names = ["deers", "trucks"]
 cls_test_one_hot_encoded = np.eye(n_classes, dtype=float)[cls_test]
 
 # Create a convolutional neural network.
-model = CNNModel()
+model = CNNModel(is_training=False)
 
 # Load the saved model.
 model.load("model/")

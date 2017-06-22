@@ -21,6 +21,8 @@ learning_rate = 0.03
 gamma = 0.99  # discount factor for reward
 max_num_episodes = 10000
 # TODO: add additional abort criterion
+max_deflection = 15 # degrees
+max_displacement = 2.4 # units from center
 model_path = 'model'
 
 
@@ -62,7 +64,7 @@ with tf.Session() as sess:
   observation = env.reset()
   step = 0
   steps_above_threshold = 0
-  while episode_number < max_num_episodes #TODO: add additional abort criterion:
+  while (episode_number < max_num_episodes) and () and () #TODO: add additional abort criterion:
     # simulate while episode is not done (episode number will only be incremented, when done)
     step += 1
 

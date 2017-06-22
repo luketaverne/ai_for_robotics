@@ -21,17 +21,20 @@ class FCLayer():
     '''
     Get the affine part of the layer, excluding the activation function.
     '''
-    return #TODO (output dimension should be a row vector)
+    #TODO (output dimension should be a row vector)
+    # print("Shape of affine part: " + str((np.dot(x,self.W) + self.b).shape))
+    return np.dot(x,self.W) + self.b
 
   def output(self, x):
     '''
     Layer output. Activation function applied to affine part.
     '''
-    return #TODO
+    #TODO
+    return self.activation_function.evaluate(self.affinePart(x))
 
   def derivativeActivation(self, x):
     '''
-    Derivative of the activation function of this layer. 
+    Derivative of the activation function of this layer.
     Will be required by the chain rule.
     '''
     return self.activation_function.derivative(self.affinePart(x))

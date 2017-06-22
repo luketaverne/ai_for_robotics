@@ -14,15 +14,21 @@ class GradientDescentOptimizer():
     '''
     Update parameters of the network and return them.
     '''
-    #TODO: update network parameters 
-    
+    #TODO: update network parameters
+    params = nn.getParameters()
+
+    for layer_idx in len(gradients.weights):
+      params.weights[layer_idx] = params.weights[layer_idx] - self.learning_rate * gradients.weights[layer_idx]
+      params.biases[layer_idx] = params.biases[layer_idx] - self.learning_rate * gradients.biases[layer_idx]
+    return params
+
   def computeBatchGradient(self, gradient_list):
     '''
-    Compute the gradient for a whole data batch from a provided gradient list. 
-    Input: 
-      Gradient list contains the gradient for each sample in the data batch. The structure is a list of variables (provided data structure support.Variable()). 
+    Compute the gradient for a whole data batch from a provided gradient list.
+    Input:
+      Gradient list contains the gradient for each sample in the data batch. The structure is a list of variables (provided data structure support.Variable()).
       The weights and biases members both contain the gradients of all the layers for one data sample.
-    Return value: 
+    Return value:
       One fused gradient including all data sample gradients.
     '''
     batch_gradient = gradient_list[0]
@@ -37,7 +43,7 @@ class GradientDescentOptimizer():
     gradients = []
     avg_batch_loss = 0
     batch_size = x_batch.shape[0]
-    
+
     for i in range(x_batch.shape[0]):
       x = np.array([x_batch[i,:]])
       y_target = np.array([y_target_batch[i,:]])
@@ -45,9 +51,8 @@ class GradientDescentOptimizer():
       avg_batch_loss += loss_function.evaluate(y, y_target)
       nn_gradient = nn.gradients(x, loss_function, y_target)
       gradients.append(nn_gradient)
-    
+
     batch_gradient = self.computeBatchGradient(gradients)
     new_p = self.getUpdatedParameters(nn, batch_gradient)
     nn.setParameters(new_p)
     return avg_batch_loss/batch_size
-

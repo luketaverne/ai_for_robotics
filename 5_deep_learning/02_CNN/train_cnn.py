@@ -30,7 +30,7 @@ if not(args.disable_visualization):
 cls_train_one_hot_encoded = np.eye(n_classes, dtype=float)[cls_train]
 
 # Create a convolutional neural network.
-model = CNNModel()
+model = CNNModel(is_training=True)
 
 # Create an object responsible of generating random batches.
 train_batch_size = 64
@@ -63,6 +63,6 @@ def optimize(num_iterations):
     time_dif = end_time - start_time
     print("Time usage: " + str(timedelta(seconds=int(round(time_dif)))))
 
-optimize(num_iterations=100)
+optimize(num_iterations=5000)
 
 model.save("model/")
