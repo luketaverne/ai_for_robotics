@@ -1,9 +1,11 @@
+import pyglet
 import tensorflow as tf
 import time
 import numpy as np
 import gym
 import pylab as pl
 import os
+import collections
 
 from NNModel import *
 import Support as sup
@@ -11,7 +13,7 @@ import Support as sup
 # Set up the simulation environment
 env = gym.make('CartPole-v0')
 env.reset()
-env.render()
+# env.render()
 env.close()
 
 #### HYPERPARAMTERS ####
@@ -52,6 +54,8 @@ episode_reward_array = []
 episode_number = 0
 running_reward = None
 reward_sum = 0
+last_hundred_rewards = q = collections.deque([0.0]*100) # List of 100 zeros to start
+solved_cutoff = 195 # taken from openai gym site, 195+ is considered solved for average of last 100 episodes
 
 with tf.Session() as sess:
   sess.run(tf.global_variables_initializer())
@@ -61,10 +65,12 @@ with tf.Session() as sess:
   for i, grad in enumerate(gradient_buffer):
     gradient_buffer[i] = grad * 0
 
+  #pretty sure observation has this format: [cart position, cart velocity, pole angle, pole rotational velocity]
   observation = env.reset()
   step = 0
   steps_above_threshold = 0
-  while (episode_number < max_num_episodes) and () and () #TODO: add additional abort criterion:
+  while (episode_number < max_num_episodes) and (np.mean(last_hundred_rewards) < solved_cutoff):
+    #TODO: add additional abort criterion:
     # simulate while episode is not done (episode number will only be incremented, when done)
     step += 1
 
@@ -73,24 +79,40 @@ with tf.Session() as sess:
 
     # Visualize every show_episode_freq episode
     if show_evolution and episode_number % show_episode_freq == 0:
-      rendering = True
+      rendering = False #was true, but my vm won't run it properly
 
     if rendering:
       env.render()
 
     # Get the action to take from the network
     network_output = sess.run(model.action_probability, feed_dict={model.input: x})
+    # print(network_output)
     # Introduce randomness during training for exploration purposes
     action = 1 if np.random.rand() < network_output else 0  # network provides the probability of sending 1 as an input
-    action_probability_network = #TODO: compute probability of chosen action (!!! is not the same as the network output) # probability of taking the action which was taken
+    #Luke: I didn't do the thing below, but I don't think we need it for anything.
+    # action_probability_network = #TODO: compute probability of chosen action (!!! is not the same as the network output) # probability of taking the action which was taken
     negated_action_array.append(1 - action)  # dealing with the negated action simplifies the reward function computation
 
     # Simulate one step of the environment and receive feedback
-    observation, reward, done, info = #TODO: conduct 1 step in simulation environment
+    observation, reward, done, info = env.step(action)#TODO: conduct 1 step in simulation environment
     reward_sum += reward  # sum up reward for the current episode
     reward_array.append(reward)
 
+    # Commenting these out because the env is designed to handle this already
+    # if (observation[2] > max_deflection * 3.14 / 180.0):
+    #   print("Tipped over")
+    #   done = True
+    #
+    # if (np.abs(observation[0]) > max_displacement):
+    #   print("Cart moved too far")
+    #   done = True
+
     if done:
+      # Let's handle the reward checking first
+      last_hundred_rewards.appendleft(reward_sum) # using collection since it is O(1) instead of O(N)
+      last_hundred_rewards.pop()
+
+
       # Only increment episode number if one episode is done
       episode_number += 1
 
@@ -139,6 +161,7 @@ with tf.Session() as sess:
       # reset for next episode
       if episode_number % print_freq == 0:
         print('Reward for last episode {}: {} \t'.format(episode_number, reward_sum))
+        print('Mean over last hundred rewards: {}'.format(np.mean(last_hundred_rewards)))
       reward_sum = 0
       step = 0
       observation = env.reset()
@@ -165,7 +188,7 @@ with tf.Session() as sess:
       action = 1 if network_output > 0.5 else 0
       # Simulate
       observation, reward, done, _ = env.step(action)
-      env.render()
+      # env.render()
 
   pl.figure('Training history')
   ax = pl.gca()

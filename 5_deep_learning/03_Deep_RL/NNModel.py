@@ -34,7 +34,7 @@ class NNModel():
     # likelihood of the chosen action given the probability output of the model
     # (negated_action stands for the action which was not taken)
     a = self.action_probability
-    a_bar = -self.action_probability
+    a_bar = self.negated_action
 
     self.likelihood = a_bar * (a_bar - a) + (1 - a_bar) * (a_bar + a)# TODO: likelihood of taking the wrong action
     log_likelihood = tf.log(self.likelihood)

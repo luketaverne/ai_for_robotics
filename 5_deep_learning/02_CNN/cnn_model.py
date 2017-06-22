@@ -2,8 +2,8 @@ import tensorflow as tf
 import numpy as np
 import os
 
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+#os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
+#os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 from tf_helpers import build_conv2d_layer
 from tf_helpers import build_fc_layer
