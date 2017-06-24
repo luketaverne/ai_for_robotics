@@ -52,11 +52,14 @@ class TestNetwork(unittest.TestCase):
     # General computations
     loss_function = loss.SquaredErrorFunction()
     y = fc_net.output(x)
+    print("y shape (network output) : {}".format(y.shape))
+    print("y shape should be: {}".format(y_target.shape))
     loss_derivative = loss_function.derivative(y, y_target)
 
     # Manually compute gradients
     h_1 = fc_net.evaluateLayer(1, x)
-    print("h_1 shape:" + str(h_1.shape))
+    print("h_1 shape (eval layer 1) : {}".format(h_1.shape))
+    print("h_1 shape :{}".format(b_1.shape))
     output_sigmoid = self.sigmoid.evaluate(np.dot(h_1, w_out) + b_out)
     print("output_sigmoid shape: {}".format(output_sigmoid.shape))
     output_sigmoid_derivative = output_sigmoid * (1 - output_sigmoid)
@@ -82,9 +85,13 @@ class TestNetwork(unittest.TestCase):
     nn_L_w_1 = gradients.weights[0]
     nn_L_b_1 = gradients.biases[0]
 
+    for i in range(len(gradients.weights)):
+        print("gradient index i={} has weight shape {} and bias shape {}".format(i,gradients.weights[i].shape,gradients.biases[i].shape))
+
     # Output derivatives
-    print("Expected: {}".format(w_out.shape))
-    print("Got: {}".format(nn_L_w_out.shape))
+    print("Output weight shape (gradients.weights[1]): {}".format(nn_L_w_out.shape))
+    print("Output weight expected (w_out): {}".format(w_out.shape))
+
     print(gradients.weights)
     self.assertTrue(np.all(nn_L_w_out.shape == w_out.shape), 'Gradient shapes of output layer do not match.')
     self.assertTrue(np.all(nn_L_b_out.shape == b_out.shape), 'Gradient shapes of output layer do not match.')
@@ -94,6 +101,8 @@ class TestNetwork(unittest.TestCase):
     # Hidden layer derivatives
     self.assertTrue(np.all(nn_L_w_1.shape == w_1.shape), 'Gradient shapes of hidden layer do not match.')
     self.assertTrue(np.all(nn_L_b_1.shape == b_1.shape), 'Gradient shapes of hidden layer do not match.')
+    print("Layer 1 weight found (nn_L_w_1): {}".format(nn_L_w_1))
+    print("Layer 1 weight expected (L_w_1): {}".format(L_w_1))
     self.assertTrue(np.all(np.isclose(L_w_1, nn_L_w_1, rtol=1.e-8)))
     self.assertTrue(np.all(np.isclose(L_b_1, nn_L_b_1, rtol=1.e-8)))
 

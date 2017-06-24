@@ -152,6 +152,7 @@ class FCNetwork():
     dCost_dy = loss_function.derivative(network_output, y_target) #TODO: implement cost function derivative w.r.t. output variables of network
     # Element-wise multiplication with sigmoid derivative (sigmoid is applied element-wise)
     # delta_fused = dCost_dy * self.layers[-1].derivativeActivation(network_output) #TODO: start backpropagating the error
+    #TODO: the above line is more general, but does not work right now
     delta_fused = dCost_dy * network_output * (1 - network_output)
     # L_w_out = np.dot(network_output.T, delta_fused)
     # L_b_out = delta_fused
@@ -164,21 +165,24 @@ class FCNetwork():
     # Gradient backpropagation
     ## Start from last layer and propagate error gradient through until first layer
     ## Attention!!!: layer_evaluations[0] is the network input while self.layers[0] is the first hidden layer
-    for layer_idx in np.arange(len(self.layers)-1, -1, -1):
+    for layer_idx in np.arange(len(self.layers)-2, -1, -1):
       logger.debug('Computing the gradient for layer {}'.format(layer_idx))
       print("Gradient for layer_idx: {}".format(layer_idx))
       # If layer is not last layer, update delta_fused (which is accumulating the back-propagated gradient)
       # TODO: implement backpropagation of gradient for arbitrary number of layers
-      L_w_prev = gradients.weights[layer_idx] # 'prev' w.r.t. the back prop
-      print("Current layer evaluations shape: {}".format(layer_evaluations[layer_idx]))
-      print("Previous layer weights shape: {}".format(L_w_prev.shape))
-      print("Current delta_fused shape: {}".format(delta_fused.shape))
+      L_w_prev = self.layers[layer_idx+1].getWeights() # 'prev' w.r.t. the back prop
+    #   print("Current layer evaluations shape: {}".format(layer_evaluations[layer_idx]))
+      print("\tPrevious layer weights (index {}) shape: {}".format(layer_idx +1,L_w_prev.shape))
+      print("\tPrevious layer biases (index {}) shape: {}".format(layer_idx+1,gradients.biases[layer_idx+1].shape))
+      print("\tCurrent delta_fused shape: {}".format(delta_fused.shape))
 
     #   delta_fused = np.dot(delta_fused, L_w_prev.T) * self.layers[layer_idx].derivativeActivation(layer_evaluations[layer_idx])
-      delta_fused = np.dot(delta_fused, L_w_prev.T) * layer_evaluations[layer_idx] * (1 - layer_evaluations[layer_idx])
+      delta_fused = np.dot(delta_fused, L_w_prev.T) * layer_evaluations[layer_idx+1] * (1 - layer_evaluations[layer_idx +1])
 
-      gradients.weights[layer_idx - 1] = np.dot(layer_evaluations[layer_idx-1].T, delta_fused) # weight
-      gradients.biases[layer_idx - 1] = delta_fused # bias
+      gradients.weights[layer_idx] = np.dot(layer_evaluations[layer_idx].T, delta_fused) # weight
+      gradients.biases[layer_idx] = delta_fused # bias
+
+      print("\tLayer index {} will have weight shape {} and bias shape {}".format(layer_idx,gradients.weights[layer_idx].shape,gradients.biases[layer_idx].shape))
 
     return gradients
 
